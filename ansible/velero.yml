@@ -1,0 +1,25 @@
+---
+- name: "Create ns"
+  hosts: localhost
+  connection: local
+  vars:
+    namespace_name: "{{ velero_namespace }}"
+  roles:
+    - namespaces
+
+- name:  "Deploy velero"
+  hosts: localhost
+  vars:
+    item_name: "{{ velero_item_name }}"
+    item_namespace: "{{ velero_namespace }}"
+    item_release_name: "{{ velero_release_name }}"
+    item_helm_repo: "{{velero_helm_repo}}"
+    item_helm_repo_endpoint: "{{velero_helm_repo_endpoint}}"
+    item_chart_version: "{{velero_chart_version}}"
+  roles:
+    - helm_install_item
+
+- name:  "additional velero setup"
+  hosts: localhost
+  roles:
+    - velero

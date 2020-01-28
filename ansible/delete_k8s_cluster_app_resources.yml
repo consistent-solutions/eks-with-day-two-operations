@@ -1,0 +1,21 @@
+---
+
+- name: "delete k8s cluster app resources"
+  hosts: localhost
+  connection: local
+  vars:
+    helm_releases:
+      fluentd:
+        name: "{{fluentd_cloudwatch_release_name}}"
+        ns: "{{fluentd_cloudwatch_namespace}}"
+      velero:
+        name: "{{velero_release_name}}"
+        ns: "{{velero_namespace}}"
+      external_dns:
+        name: "{{external_dns_release_name}}"
+        ns: "{{external_dns_namespace}}"
+      prometheus_operator:
+        name: "{{prometheus_operator_release_name}}"
+        ns: "{{prometheus_operator_namespace}}"
+  roles:
+    - delete_k8s_cluster_app_resources

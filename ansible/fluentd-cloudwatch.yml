@@ -1,0 +1,39 @@
+---
+
+- name: "Create ns"
+  hosts: localhost
+  connection: local
+  vars:
+    namespace_name: "{{ fluentd_cloudwatch_namespace }}"
+  roles:
+    - namespaces
+
+- name:  "Deploy fluentd-cloudwatch ds"
+  hosts: localhost
+  vars:
+    item_name: "{{ fluentd_cloudwatch_item_name }}"
+    item_namespace: "{{ fluentd_cloudwatch_namespace }}"
+    item_release_name: "{{ fluentd_cloudwatch_release_name }}"
+    item_helm_repo: "{{fluentd_cloudwatch_helm_repo}}"
+    item_helm_repo_endpoint: "{{fluentd_cloudwatch_helm_repo_endpoint}}"
+    item_chart_version: "{{fluentd_cloudwatch_chart_version}}"
+  roles:
+    - helm_install_item
+
+- name: "set retention on cloudwatch log group"
+  hosts: localhost
+  tasks:
+    - name: wait for cw log group to be created
+      shell: |
+        aws logs describe-log-groups \
+        --log-group-name-prefix {{log_group_name}} \
+        --region {{aws_region}} | jq .logGroups[].arn | wc -l
+      register: lg_result
+      until: lg_result.stdout|int > 0|int
+      retries: 30
+      delay: 5
+
+#  aws logs describe-log-groups --log-group-name-prefix dev-eks --region us-east-1 | jq .logGroups[].arn | wc -l
+
+    - name: set retention on cw log group
+      shell: aws --region {{aws_region}} logs put-retention-policy --log-group-name {{log_group_name}} --retention-in-days {{log_group_retention}}

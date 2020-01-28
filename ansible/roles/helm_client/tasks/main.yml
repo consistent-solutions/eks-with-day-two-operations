@@ -1,0 +1,31 @@
+---
+
+- set_fact:
+    kubectl_command: "/usr/local/bin/kubectl"
+
+- set_fact:
+    helm_command: "/usr/local/bin/helm"
+
+- name: check file exists
+  stat:
+    path: "{{ helm_path }}/{{helm_platform_binary}}/helm"
+  register: helm_check
+
+- block:
+  - debug: msg="install helm since it does not exist"
+
+  - name: ensure helm path exists
+    file: state=directory path="{{ helm_path }}"
+
+  - name: download helm tarball
+    get_url:  url={{ helm_download }} dest={{ helm_path }}
+
+  - name: unarchive the helm tarball
+    unarchive: src={{ helm_path }}/{{helm_tarball}} dest={{ helm_path }} remote_src=yes
+
+  - name: ensure helm binary is executable
+    file: path={{ helm_path }}/{{helm_platform_binary}}/helm mode=0755
+
+  - name: create symlink - getsome
+    file: src={{ helm_path }}/{{helm_platform_binary}}/helm dest=/usr/local/bin/helm state=link
+  when: helm_check.stat.exists == false

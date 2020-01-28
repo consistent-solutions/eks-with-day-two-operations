@@ -1,0 +1,46 @@
+---
+- name: check file exists
+  stat:
+    path: "{{ velero_path }}/{{velero_base}}/velero"
+  register: velero_check
+
+- block:
+
+  - name: ensure velero path exists
+    file: state=directory path="{{ velero_path }}"
+
+  - name: download velero tarball
+    get_url:  url={{ velero_download }} dest={{ velero_path }}
+
+  - name: unarchive the velero tarball
+    unarchive: src={{ velero_path }}/{{velero_tarball}} dest={{ velero_path }} remote_src=yes
+
+  - name: ensure velero binary is executable
+    file: path={{ velero_path }}/{{velero_base}}/velero mode=0755
+
+  - name: create symlink - getsome
+    file: src={{ velero_path }}/{{velero_base}}/velero dest=/usr/local/bin/velero state=link
+
+  when: velero_check.stat.exists == false
+
+- name: wait for velero to be running
+  shell: kubectl get po -n {{ velero_namespace }} | grep "Running" | awk '{print $1}' | grep velero | wc -l
+  register: velero_running_count
+  until: velero_running_count.stdout|int == 1
+  retries: 20
+  delay: 10
+
+- fail: msg="ensure velero is running!"
+  when: velero_running_count.stdout | int == 0
+
+#NOTE: delete, then create to ensure we always have our expected schedule
+#NOTE: in our version of velero we're using, there is no apply cmd for idempotency
+- name: delete velero schedule
+  shell: velero delete schedule {{ whole_cluster_backup_name }} --namespace {{ velero_namespace }} --confirm
+
+#TODO: replace leveraging velero helm chart
+- name: create velero backup schedule for the whole cluster backup
+  shell: velero create schedule {{ whole_cluster_backup_name }} --schedule "{{velero_backup_cron_schedule}}" --namespace {{ velero_namespace }}
+
+- name: setup our config for velero client
+  shell: velero client config set namespace={{ velero_namespace }}

@@ -1,0 +1,6 @@
+---
+velero_path: /opt/velero-{{ velero_version }}
+velero_base: "velero-{{ velero_version }}-linux-amd64"
+velero_tarball: "{{velero_base}}.tar.gz"
+velero_download: "https://github.com/vmware-tanzu/velero/releases/download/{{  velero_version }}/{{ velero_tarball }}"
+whole_cluster_backup_name: "whole-{{cluster_name}}-cluster-backup"

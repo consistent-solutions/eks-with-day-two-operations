@@ -1,0 +1,15 @@
+---
+- name: create ns dir
+  file:
+    path: "/tmp/namespaces/{{ namespace_name }}"
+    state: directory
+
+- name: create the namespace.yaml from template
+  template:
+    src: namespace.yaml.j2
+    dest: "/tmp/namespaces/{{ namespace_name }}/namespace.yaml"
+
+- name: create ns in the cluster
+  shell: |
+    {{ kubectl_command }} \
+    apply -f /tmp/namespaces/{{ namespace_name }}/namespace.yaml

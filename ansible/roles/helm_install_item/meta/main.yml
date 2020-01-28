@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: helm_client }
+  - { role: aws_info }

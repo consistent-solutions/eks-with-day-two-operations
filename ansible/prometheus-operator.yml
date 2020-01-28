@@ -1,0 +1,21 @@
+---
+
+- name: "Create ns"
+  hosts: localhost
+  connection: local
+  vars:
+    namespace_name: "{{ prometheus_operator_namespace }}"
+  roles:
+    - namespaces
+
+- name:  "Deploy alb ingress controller"
+  hosts: localhost
+  vars:
+    item_name: "{{ prometheus_operator_item_name }}"
+    item_namespace: "{{ prometheus_operator_namespace }}"
+    item_release_name: "{{ prometheus_operator_release_name }}"
+    item_helm_repo: "{{prometheus_operator_helm_repo}}"
+    item_helm_repo_endpoint: "{{prometheus_operator_helm_repo_endpoint}}"
+    item_chart_version: "{{prometheus_operator_chart_version}}"
+  roles:
+    - helm_install_item

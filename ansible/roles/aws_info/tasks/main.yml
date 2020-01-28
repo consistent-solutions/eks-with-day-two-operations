@@ -1,0 +1,36 @@
+---
+- block:
+  - name: obtain vpc_id
+    shell:  |
+      aws ec2 describe-vpcs --filters \
+      --filters Name=tag:Name,Values=kubernetes-{{cluster_name}}-vpc \
+      --query 'Vpcs[].VpcId' --region {{aws_region}} | jq .[] --raw-output
+    register: aws_result
+    until: aws_result is success
+    retries: 12
+    delay: 5
+
+  - set_fact: vpc_id={{aws_result.stdout}}
+
+  when: vpc_id is not defined
+
+- debug: var=vpc_id
+
+# for testing purposes with jq: echo '["d","a"]' | jq  'sort | join(", ")' --raw-output
+- block:
+  - name: obtain public subnet ids for ingress object annotation
+    shell: |
+       aws ec2 describe-subnets \
+       --filters Name=tag:Name,Values=kubernetes-{{cluster_name}}-*public \
+       --query Subnets[].SubnetId \
+       --region {{aws_region}} | jq 'sort | join(", ")' --raw-output
+    register: subnet_result
+    until: subnet_result is success
+    retries: 12
+    delay: 5
+
+  - set_fact: public_subnet_ids={{subnet_result.stdout}}
+
+  when: public_subnet_ids is not defined
+
+- debug: var=public_subnet_ids

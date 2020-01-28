@@ -1,0 +1,41 @@
+---
+# alternatives to current solution helm install solution: (a) leverage helm ansible module (b) template helm chart and apply spec files (c) I'm sure there are other options
+
+- debug: msg="helm template for {{ item_name }}"
+
+- name: make a temp dir for the values file
+  file:
+    path: "{{ helm_chart_values_dir }}"
+    state: directory
+
+- name: create helm override values file
+  template:
+    src: "{{ item_name }}_values.yaml.j2"
+    dest: "{{ helm_chart_values_dir }}/{{ item_name }}_values.yaml"
+
+- name: list helm installations
+  shell: helm list --all-namespaces
+  register: helm_list_results
+
+- name: add helm repo
+  shell: helm repo add {{item_helm_repo}} {{item_helm_repo_endpoint}}
+
+- name: install remote helm chart
+  shell: |
+    {{helm_command}} install {{item_release_name}} \
+    --namespace {{item_namespace}} {{item_helm_repo}}/{{item_name}} --version {{item_chart_version}} \
+    -f {{ helm_chart_values_dir }}/{{ item_name }}_values.yaml
+  when: item_release_name not in helm_list_results.stdout and item_name != prometheus_operator_item_name
+
+- name: install local helm chart
+  shell: |
+    {{helm_command}} install {{item_release_name}} \
+    --namespace {{item_namespace}} ../helm/{{item_name}}  \
+    -f {{ helm_chart_values_dir }}/{{ item_name }}_values.yaml
+  when: item_release_name not in helm_list_results.stdout and item_name == prometheus_operator_item_name
+
+
+# - name: Delete templated values file
+#   file:
+#     path: "{{ helm_chart_values_dir }}/{{ item_name }}_values.yaml"
+#     state: absent

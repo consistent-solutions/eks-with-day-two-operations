@@ -1,0 +1,20 @@
+---
+
+- name:  "Run helm client"
+  hosts: localhost
+  roles:
+    - helm_client
+
+- name: "Create ns"
+  hosts: localhost
+  connection: local
+  vars:
+    namespace_name: "{{ game_namespace }}"
+  roles:
+    - namespaces
+
+
+- name:  "Deploy 2048 game"
+  hosts: localhost
+  roles:
+    - 2048_game

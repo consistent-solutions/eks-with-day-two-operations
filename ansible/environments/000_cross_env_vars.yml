@@ -1,0 +1,124 @@
+---
+
+#################   vars that may change based on install #####################
+# NOTE: see this article for how the environments are setup:
+# https://www.digitalocean.com/community/tutorials/how-to-manage-multistage-environments-with-ansible
+# - the 000_cross_env_vars.yml is symlink'd from within the <env>/group_vars/all
+
+cluster_name: dev
+aws_account_id: "317605006010"
+aws_region: us-east-1
+base_iam_role: "arn:aws:iam::{{aws_account_id}}:role/"
+aws_cert_manager_wildcard_arn: "arn:aws:acm:{{aws_region}}:{{aws_account_id}}:certificate/fd801e01-f67a-4ab8-856a-20ea5645bb61"
+domain_name: "consistentsolutionstech.io"
+velero_bucket: "consistentsolutions-dev-velero"
+
+# user pool vars
+user_pool_id: "{{aws_region}}_qhPeOudWm"
+user_pool_arn: "arn:aws:cognito-idp:{{aws_region}}:{{aws_account_id}}:userpool/{{user_pool_id}}"
+user_pool_domain: "consistentsolutionstech"
+game_cognito_user_pool_client_id: "3a3ggn1ug8nsh0tgodua7asqkf"
+alertmanager_cognito_user_pool_client_id: 3v3l8fq3hdsbl3agdgvtkfl7ms
+prometheus_cognito_user_pool_client_id: "1549l2m9j2j5nng6hdbi3nhc34"
+
+# this is for consistentsolutionstech.io
+external_dns_hosted_zone_id: "Z32U1A70WQFBB1"
+
+log_group_retention: 5
+
+# this is set as daily
+velero_backup_cron_schedule: "00 10 * * *"
+###############################################################################
+
+
+ns_prefix: "{{ cluster_name }}"
+kubectl_command: kubectl
+helm_chart_values_dir: "/tmp/helm_chart_values/{{cluster_name}}"
+helm_command: "/usr/local/bin/helm"
+
+
+disaster_recovery_namespace: "{{ ns_prefix }}-dr"
+logging_namespace: "{{ns_prefix}}-logging"
+ingress_namespace: "{{ns_prefix}}-ingress"
+monitoring_namespace: "{{ns_prefix}}-monitoring"
+
+gp2_storage_class_name: "{{cluster_name}}-gp2"
+
+# velero vars
+velero_item_name: velero
+velero_namespace: "{{disaster_recovery_namespace}}"
+velero_release_name: "{{cluster_name}}-{{velero_item_name}}"
+
+velero_version: "v1.2.0"
+
+velero_helm_repo: vmware-tanzu
+velero_helm_repo_endpoint: https://vmware-tanzu.github.io/helm-charts
+velero_chart_version: 2.7.4
+
+velero_iam_role_arn: "{{base_iam_role}}{{cluster_name}}-velero"
+
+## alb ingress controller vars
+alb_ingress_controller_namespace: "{{ingress_namespace}}"
+alb_ingress_controller_item_name: "aws-alb-ingress-controller"
+alb_ingress_controller_release_name: "{{cluster_name}}-{{alb_ingress_controller_item_name}}"
+
+alb_ingress_controller_helm_repo: incubator
+alb_ingress_controller_helm_repo_endpoint: http://storage.googleapis.com/kubernetes-charts-incubator
+alb_ingress_controller_chart_version: 0.1.12
+
+alb_ingress_controller_iam_role_arn: "{{base_iam_role}}{{cluster_name}}-alb-ingress-controller"
+
+# 2048 game vars
+game_namespace: "{{ns_prefix}}-game"
+
+
+# fluentd cloudwatch
+fluentd_cloudwatch_item_name: "fluentd-cloudwatch"
+fluentd_cloudwatch_namespace: "{{logging_namespace}}"
+fluentd_cloudwatch_release_name: "{{cluster_name}}-{{fluentd_cloudwatch_item_name}}"
+
+fluentd_cloudwatch_helm_repo: incubator
+fluentd_cloudwatch_helm_repo_endpoint: http://storage.googleapis.com/kubernetes-charts-incubator
+fluentd_cloudwatch_chart_version: 0.12.1
+
+fluentd_cloudwatch_iam_role_arn: "{{base_iam_role}}{{cluster_name}}-fluentd-cloudwatch"
+
+log_group_name: "{{cluster_name}}-eks" # Where the logs will reside
+
+# external dns
+external_dns_item_name: "external-dns"
+external_dns_namespace: "{{ingress_namespace}}"
+external_dns_release_name: "{{cluster_name}}-{{external_dns_item_name}}"
+
+external_dns_helm_repo: stable
+external_dns_helm_repo_endpoint: https://kubernetes-charts.storage.googleapis.com
+external_dns_chart_version: 2.14.3
+
+external_dns_iam_role_arn: "{{base_iam_role}}{{cluster_name}}-external-dns"
+
+#kube2iam
+kube2iam_item_name: "kube2iam"
+kube2iam_namespace: "kube-system"
+kube2iam_release_name: "{{cluster_name}}-{{kube2iam_item_name}}"
+
+kube2iam_helm_repo: stable
+kube2iam_helm_repo_endpoint: https://kubernetes-charts.storage.googleapis.com
+kube2iam_chart_version: 2.1.0
+
+# prometheus-operator vars
+prometheus_operator_item_name: "prometheus-operator"
+prometheus_operator_namespace: "{{monitoring_namespace}}"
+prometheus_operator_release_name: "{{cluster_name}}-{{prometheus_operator_item_name}}"
+
+prometheus_operator_helm_repo: stable
+prometheus_operator_helm_repo_endpoint: https://kubernetes-charts.storage.googleapis.com
+prometheus_operator_chart_version: 8.5.14
+
+alertmanager_storage_size: "12Gi"
+alertmanager_storage_class: "{{gp2_storage_class_name}}"
+
+grafana_storage_class: "{{gp2_storage_class_name}}"
+grafana_storage_size: "10Gi"
+
+prometheus_storage_size: "8Gi"
+prometheus_storage_class: "{{gp2_storage_class_name}}"

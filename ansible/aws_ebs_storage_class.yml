@@ -1,0 +1,5 @@
+---
+- name:  "Add ebs storage class"
+  hosts: localhost
+  roles:
+    - aws_ebs_storage_class

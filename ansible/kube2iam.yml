@@ -1,0 +1,15 @@
+---
+
+# NOTE: not creating namespace here since it will be placed in kube-system ns
+
+- name:  "Deploy kube2iam"
+  hosts: localhost
+  vars:
+    item_name: "{{ kube2iam_item_name }}"
+    item_namespace: "{{ kube2iam_namespace }}"
+    item_release_name: "{{ kube2iam_release_name }}"
+    item_helm_repo: "{{kube2iam_helm_repo}}"
+    item_helm_repo_endpoint: "{{kube2iam_helm_repo_endpoint}}"
+    item_chart_version: "{{kube2iam_chart_version}}"
+  roles:
+    - helm_install_item

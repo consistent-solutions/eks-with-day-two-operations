@@ -1,0 +1,102 @@
+---
+
+- name: game namespace exists
+  shell: kubectl get ns {{game_namespace}} | wc -l
+  register: game_ns_result
+
+- name: remove game ns
+  shell: kubectl delete ns {{game_namespace}}
+  when: game_ns_result.stdout|int != 0
+
+- name: helm uninstall
+  shell: if [ $(helm list --namespace {{item.value.ns}} | grep {{item.value.name}} | wc -l) -gt 0 ]; then helm uninstall {{ item.value.name }} --namespace {{ item.value.ns }}; fi
+  loop: "{{ lookup('dict', helm_releases) }}"
+  register: helm_uninstall_result
+  until: helm_uninstall_result is success
+  retries: 10
+  delay: 20
+
+- name: remove all items from velero s3 bucket to prep for tf deletion
+  shell:  aws --region {{aws_region}} s3 rm s3://{{velero_bucket}}/backups --recursive
+  register: aws_result
+  until: aws_result is success
+  retries: 15
+  delay: 20
+
+- name: see if cw log group exists
+  shell: |
+    aws logs describe-log-groups \
+    --log-group-name-prefix {{log_group_name}} \
+    --region {{aws_region}} | jq .logGroups[].arn | wc -l
+  register: lg_result
+  until: lg_result is success
+  retries: 30
+  delay: 5
+
+- name: delete cw log group
+  shell: aws logs delete-log-group --log-group-name {{log_group_name}} --region {{aws_region}}
+  when: lg_result.stdout|int > 0|int
+  register: aws_result
+  until: aws_result is success
+  retries: 15
+  delay: 20
+
+- name: query for ebs volumes
+  shell: aws --region {{aws_region}} ec2 describe-volumes --filters Name=tag-key,Values="kubernetes.io/cluster/{{cluster_name}}-eks-cluster" | jq '.Volumes[] | select(contains({State:"available"})).VolumeId' --raw-output
+  register: unattached_ebs_volumes
+  until: unattached_ebs_volumes is success
+  retries: 20
+  delay: 20
+
+- debug: var=unattached_ebs_volumes
+
+- name: rm unattached ebs volumes
+  shell: aws --region {{aws_region}} ec2 delete-volume --volume-id {{item}}
+  when: unattached_ebs_volumes.stdout != ""
+  with_items: "{{unattached_ebs_volumes.stdout_lines}}"
+  ignore_errors: true
+  register: delete_ebs_volumes
+  until: delete_ebs_volumes is success
+  retries: 20
+  delay: 20
+
+- name: query for snapshots
+  shell: aws --region {{aws_region}} ec2 describe-snapshots --filters Name=tag-key,Values="kubernetes.io/cluster/{{cluster_name}}-eks-cluster" | jq '.Snapshots[] | select(contains({State:"complete"})).SnapshotId' --raw-output
+  register: completed_ebs_snapshots
+  until: completed_ebs_snapshots is success
+  retries: 20
+  delay: 20
+
+- debug: var=completed_ebs_snapshots
+
+- name: rm snapshot volumes
+  shell: aws --region {{aws_region}} ec2 delete-snapshot --snapshot-id {{item}}
+  when: completed_ebs_snapshots.stdout != ""
+  with_items: "{{completed_ebs_snapshots.stdout_lines}}"
+  ignore_errors: true
+  register: delete_ebs_snapshots
+  until: delete_ebs_snapshots is success
+  retries: 20
+  delay: 20
+
+- name: wait until security groups for lbs have been deleted. This will imply that ingress lbs have been deleted. This can take a few minutes
+  shell: aws --region {{aws_region}} ec2 describe-security-groups --filters Name=vpc-id,Values={{vpc_id}} Name=tag-key,Values="kubernetes.io/ingress-name"  | jq '.SecurityGroups[] .GroupId' --raw-output
+  register: lb_sg_group_result
+  until: lb_sg_group_result.stdout == ""
+  retries: 100
+  delay: 10
+
+- name: see if alb ingress ic exists
+  shell: helm list --namespace {{alb_ingress_controller_namespace}} | grep {{alb_ingress_controller_release_name}} | wc -l
+  register: alb_ic_result
+  until: alb_ic_result is success
+  retries: 10
+  delay: 20
+
+- name: helm uninstall aws-lb-ic
+  shell: helm uninstall {{alb_ingress_controller_release_name}} --namespace {{alb_ingress_controller_namespace}}
+  when: alb_ic_result.stdout|int > 0|int
+  register: helm_uninstall_result
+  until: helm_uninstall_result is success
+  retries: 10
+  delay: 20

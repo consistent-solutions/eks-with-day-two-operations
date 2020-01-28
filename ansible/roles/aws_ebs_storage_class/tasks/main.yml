@@ -1,0 +1,20 @@
+---
+
+- set_fact:
+    kubectl_command: "/usr/local/bin/kubectl"
+
+- name: unset default storage class created by eks
+  shell: |
+    {{ kubectl_command }}  \
+    patch storageclass gp2 \
+    -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+
+- name: template our gp2 storageclass
+  template:
+    src: ../templates/gp2_storageclass.yaml.j2
+    dest: "/tmp/gp2_storageclass.yaml"
+
+- name: add our gp2 storageclass
+  shell: |
+    {{ kubectl_command }}  \
+    apply -f /tmp/gp2_storageclass.yaml

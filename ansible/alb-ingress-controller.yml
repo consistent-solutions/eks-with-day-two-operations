@@ -1,0 +1,21 @@
+---
+
+- name: "Create ns"
+  hosts: localhost
+  connection: local
+  vars:
+    namespace_name: "{{ alb_ingress_controller_namespace }}"
+  roles:
+    - namespaces
+
+- name:  "Deploy alb ingress controller"
+  hosts: localhost
+  vars:
+    item_name: "{{ alb_ingress_controller_item_name }}"
+    item_namespace: "{{ alb_ingress_controller_namespace }}"
+    item_release_name: "{{ alb_ingress_controller_release_name }}"
+    item_helm_repo: "{{alb_ingress_controller_helm_repo}}"
+    item_helm_repo_endpoint: "{{alb_ingress_controller_helm_repo_endpoint}}"
+    item_chart_version: "{{alb_ingress_controller_chart_version}}"
+  roles:
+    - helm_install_item

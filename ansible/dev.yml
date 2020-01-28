@@ -1,0 +1,9 @@
+---
+- import_playbook: aws_ebs_storage_class.yml
+- import_playbook: kube2iam.yml
+- import_playbook: fluentd-cloudwatch.yml
+- import_playbook: external-dns.yml
+- import_playbook: alb-ingress-controller.yml
+- import_playbook: velero.yml
+- import_playbook: prometheus-operator.yml
+- import_playbook: 2048-game.yml

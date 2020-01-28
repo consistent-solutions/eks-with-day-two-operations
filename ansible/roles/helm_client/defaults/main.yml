@@ -1,0 +1,7 @@
+---
+helm_version: "v3.0.2"
+helm_path: /opt/helm-{{ helm_version }}
+helm_platform_binary: "linux-amd64"
+helm_tarball: "helm-{{ helm_version }}-{{helm_platform_binary}}.tar.gz"
+helm_download: "https://get.helm.sh/{{helm_tarball}}"
+# https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz

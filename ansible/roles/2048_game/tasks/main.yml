@@ -1,0 +1,23 @@
+---
+
+- name: create helm override values file
+  template:
+    src: "{{ item }}.yaml.j2"
+    dest: "/tmp/{{ item }}.yaml"
+  with_items:
+    - "2048-service"
+    - "2048-deployment"
+    - "2048-ingress"
+
+- name: apply files
+  shell: |
+    {{ kubectl_command }} \
+    apply -R  -f /tmp/{{ item }}.yaml
+  register: install_results
+  until: install_results is success
+  retries: 5
+  delay: 3
+  with_items:
+    - "2048-service"
+    - "2048-deployment"
+    - "2048-ingress"
