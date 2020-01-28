@@ -1,0 +1,6 @@
+**/.terraform/*
+**.DS_Store**
+**.lock
+**.gitkeep
+**.log
+*.retry
