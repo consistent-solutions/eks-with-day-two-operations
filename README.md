@@ -23,8 +23,8 @@ To demonstrate automation of AWS EKS with an ecosystem that empowers Day 2 Opera
   - metrics/alerting: view system wide metrics and configure alerts with grafana, prometheus, & alertmanger
   - ingress: using aws-alb-ingress-controller for dynamic lb creation and leverage AWS Certificate Manager for tls on ingress objects
   - dynamic cnames: leveraging external-dns to dynamically create cnames
-  - encryption-at-rest: leveraging the gp2 storageclass for encryption ebs volumes
-  - fine-grain-app-permissions: leverages kube2iam to
+  - encryption-at-rest: leveraging the gp2 storageclass for encrypted ebs volumes
+  - fine-grain-app-permissions: leverages kube2iam to give least privileged permissions to pods
   - authentication: leverages AWS Cognito for app authentication
 
 
