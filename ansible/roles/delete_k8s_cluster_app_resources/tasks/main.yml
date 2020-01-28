@@ -48,6 +48,28 @@
   retries: 15
   delay: 20
 
+- name: wait until security groups for lbs have been deleted. This will imply that ingress lbs have been deleted. This can take a few minutes
+  shell: aws --region {{aws_region}} ec2 describe-security-groups --filters Name=vpc-id,Values={{vpc_id}} Name=tag-key,Values="kubernetes.io/ingress-name"  | jq '.SecurityGroups[] .GroupId' --raw-output
+  register: lb_sg_group_result
+  until: lb_sg_group_result.stdout == ""
+  retries: 100
+  delay: 10
+
+- name: see if alb ingress ic exists
+  shell: helm list --namespace {{alb_ingress_controller_namespace}} | grep {{alb_ingress_controller_release_name}} | wc -l
+  register: alb_ic_result
+  until: alb_ic_result is success
+  retries: 10
+  delay: 20
+
+- name: helm uninstall aws-lb-ic
+  shell: helm uninstall {{alb_ingress_controller_release_name}} --namespace {{alb_ingress_controller_namespace}}
+  when: alb_ic_result.stdout|int > 0|int
+  register: helm_uninstall_result
+  until: helm_uninstall_result is success
+  retries: 10
+  delay: 20
+
 - name: query for ebs volumes
   shell: aws --region {{aws_region}} ec2 describe-volumes --filters Name=tag-key,Values="kubernetes.io/cluster/{{cluster_name}}-eks-cluster" | jq '.Volumes[] | select(contains({State:"available"})).VolumeId' --raw-output
   register: unattached_ebs_volumes
@@ -84,26 +106,4 @@
   register: delete_ebs_snapshots
   until: delete_ebs_snapshots is success
   retries: 20
-  delay: 20
-
-- name: wait until security groups for lbs have been deleted. This will imply that ingress lbs have been deleted. This can take a few minutes
-  shell: aws --region {{aws_region}} ec2 describe-security-groups --filters Name=vpc-id,Values={{vpc_id}} Name=tag-key,Values="kubernetes.io/ingress-name"  | jq '.SecurityGroups[] .GroupId' --raw-output
-  register: lb_sg_group_result
-  until: lb_sg_group_result.stdout == ""
-  retries: 100
-  delay: 10
-
-- name: see if alb ingress ic exists
-  shell: helm list --namespace {{alb_ingress_controller_namespace}} | grep {{alb_ingress_controller_release_name}} | wc -l
-  register: alb_ic_result
-  until: alb_ic_result is success
-  retries: 10
-  delay: 20
-
-- name: helm uninstall aws-lb-ic
-  shell: helm uninstall {{alb_ingress_controller_release_name}} --namespace {{alb_ingress_controller_namespace}}
-  when: alb_ic_result.stdout|int > 0|int
-  register: helm_uninstall_result
-  until: helm_uninstall_result is success
-  retries: 10
   delay: 20
