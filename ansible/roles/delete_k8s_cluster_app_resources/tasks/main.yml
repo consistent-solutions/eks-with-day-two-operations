@@ -16,8 +16,15 @@
   retries: 10
   delay: 20
 
-- name: remove all items from velero s3 bucket to prep for tf deletion
+- name: remove backups from velero s3 bucket to prep for tf deletion
   shell:  aws --region {{aws_region}} s3 rm s3://{{velero_bucket}}/backups --recursive
+  register: aws_result
+  until: aws_result is success
+  retries: 15
+  delay: 20
+
+- name: remove restores from velero s3 bucket to prep for tf deletion
+  shell:  aws --region {{aws_region}} s3 rm s3://{{velero_bucket}}/restores --recursive
   register: aws_result
   until: aws_result is success
   retries: 15
