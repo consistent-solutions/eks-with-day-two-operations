@@ -1,0 +1,6 @@
+---
+- name:  "deploy (node) cluster autoscaler"
+  hosts: localhost
+  roles:
+    - node_cluster_autoscaler
+

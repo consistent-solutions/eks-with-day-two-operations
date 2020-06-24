@@ -14,6 +14,14 @@ variable "eks_node_size" {
   default = "2"
 }
 
+variable "eks_node_min" {
+  default = "2"
+}
+
+variable "eks_node_max" {
+  default = "5"
+}
+
 variable "eks_version" {
   default = "1.14"
 }

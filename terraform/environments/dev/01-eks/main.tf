@@ -42,6 +42,8 @@ module "eks-node" {
   eks_cluster_name         = "${module.eks-cluster.eks_cluster_name}"
   subnet_ids               = "${data.terraform_remote_state.00-base-infra.aws_subnet_ids_private}"
   eks_node_size            = "${var.eks_node_size}"
+  eks_node_min_count       = "${var.eks_node_min}"
+  eks_node_max_count       = "${var.eks_node_max}"
 
 }
 

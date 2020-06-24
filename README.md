@@ -13,7 +13,7 @@ To demonstrate automation of AWS EKS with an ecosystem that empowers Day 2 Opera
   - public/private subnets
   - optional bastion
   - locked down eks control plane by default
-  - eks nodes in private subnets
+  - eks nodes in private subnets with node autoscaler
   - s3 bucket for cluster backups with velero
   - optional workstation to interact with cluster
 - `ansible` leveraging community helm charts to manage tooling on k8s
@@ -26,7 +26,7 @@ To demonstrate automation of AWS EKS with an ecosystem that empowers Day 2 Opera
   - encryption-at-rest: leveraging the gp2 storageclass for encrypted ebs volumes
   - fine-grain-app-permissions: leverages kube2iam to give least privileged permissions to pods
   - authentication: leverages AWS Cognito for app authentication
-
+  - scalability: with eks node autoscaler
 
 - ansible-vault password is '.'
 
@@ -103,7 +103,7 @@ To demonstrate automation of AWS EKS with an ecosystem that empowers Day 2 Opera
 5. Double check no billable resources exist
 
 
-## AUTH for other users/roles
+### AUTH for other users/roles
 
 - NOTE: whatever iam user/role is leveraged to create the eks cluster, that user/role
 will have default admin credentials to the cluster
@@ -131,7 +131,7 @@ data:
 
 ```
 
-## Steps to add for workstation or bastion
+### Steps to add for workstation or bastion
 - NOTE: not using workstation, but the bastion instead, then see the section below with leveraging bastion
   - MOST the steps for configuring workstation are already done for you
 - add ssh key for github/bitbucket auth
@@ -148,7 +148,7 @@ ansible-playbook -i environments/dev dev.yml --ask-vault-pass
 
 
 
-## To interact with cluster on bastion (when workstation not around)
+### To interact with cluster on bastion (when workstation not around)
 
 0) setup ability to talk to control plane
 
@@ -188,6 +188,17 @@ kubectl get po --all-namespaces
 kubectl get nodes
 
 ```
+
+### Confirm Node Cluster Autoscaler
+
+1. ansible-playbook -i environments/dev node-cluster-autoscaler.yml
+
+2. kubectl run nginx --image=nginx -n default
+
+3. kubectl scale --replicas=12 deployment/nginx
+
+4. check for more nodes as the nginx deployment is scaled up
+
 
 ## TODOS
 
