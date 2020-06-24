@@ -203,7 +203,6 @@ kubectl get nodes
 ## TODOS
 
 #### cluster todos
-- add autoscaling
 - look into fargate
 - add scenario for upgrading (multiple ways to do this depending on workflow/ecosystem)
 
