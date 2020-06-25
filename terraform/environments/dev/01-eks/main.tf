@@ -56,3 +56,51 @@ module "iam-resources-for-apps" {
   velero_bucket_name       = "${data.terraform_remote_state.00-base-infra.velero_bucket_name}"
   hosted_zone_id           = "${var.hosted_zone_id}"
 }
+
+
+resource "aws_eks_fargate_profile" "fargate-example" {
+  cluster_name           = "${module.eks-cluster.eks_cluster_name}"
+  fargate_profile_name   = "${var.env_name}-fargate-profile"
+  pod_execution_role_arn = "${aws_iam_role.fargate_pod_execution_role.arn}"
+  subnet_ids             = ["${data.terraform_remote_state.00-base-infra.aws_subnet_ids_private}"]
+
+  selector {
+    namespace = "fargate-ns"
+
+    #labels = { scheduler = "fargate" }
+  }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.example-AmazonEKSFargatePodExecutionRolePolicy"
+  ]
+}
+
+resource "aws_iam_role_policy_attachment" "example-AmazonEKSFargatePodExecutionRolePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
+  role       = "${aws_iam_role.fargate_pod_execution_role.name}"
+}
+
+resource "aws_iam_role" "fargate_pod_execution_role" {
+  name = "${var.env_name}-eks-fargate-pod-execution-role"
+  #force_detach_policies = true
+
+assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": [
+           "eks.amazonaws.com",
+           "eks-fargate-pods.amazonaws.com"
+           ]
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+}

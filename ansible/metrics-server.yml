@@ -1,0 +1,6 @@
+---
+
+- name:  "deploy metrics server"
+  hosts: localhost
+  roles:
+    - metrics_server
