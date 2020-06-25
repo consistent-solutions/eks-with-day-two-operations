@@ -1,0 +1,19 @@
+---
+
+- name: create autoscaler override values file
+  template:
+    src: "{{ item }}.yaml.j2"
+    dest: "/tmp/{{ item }}.yaml"
+  with_items:
+    - "cluster-autoscaler-autodiscover"
+
+- name: apply file
+  shell: |
+    {{ kubectl_command }} \
+    apply -R  -f /tmp/{{ item }}.yaml
+  register: install_results
+  until: install_results is success
+  retries: 5
+  delay: 3
+  with_items:
+    - "cluster-autoscaler-autodiscover"

@@ -13,6 +13,9 @@ aws_cert_manager_wildcard_arn: "arn:aws:acm:{{aws_region}}:{{aws_account_id}}:ce
 domain_name: "consistentsolutionstech.io"
 velero_bucket: "consistentsolutions-dev-velero"
 
+# for node cluster autoscaler (autodiscovery)
+cluster_name_tag: "{{ cluster_name }}-eks-cluster"
+
 # user pool vars
 user_pool_id: "{{aws_region}}_qhPeOudWm"
 user_pool_arn: "arn:aws:cognito-idp:{{aws_region}}:{{aws_account_id}}:userpool/{{user_pool_id}}"

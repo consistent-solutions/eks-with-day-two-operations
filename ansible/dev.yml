@@ -7,3 +7,4 @@
 - import_playbook: velero.yml
 - import_playbook: prometheus-operator.yml
 - import_playbook: 2048-game.yml
+- import_playbook: node-cluster-autoscaler.yml

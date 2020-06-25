@@ -2,6 +2,14 @@ variable "eks_node_size" {
   description = "number of eks nodes"
 }
 
+variable "eks_node_min_count" {
+  description = "min number of eks nodes"
+}
+
+variable "eks_node_max_count" {
+  description = "max number of eks nodes"
+}
+
 variable "env_name" {
   description = "cluster name"
 }
