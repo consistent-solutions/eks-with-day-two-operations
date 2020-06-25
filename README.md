@@ -199,11 +199,19 @@ kubectl get nodes
 
 4. check for more nodes as the nginx deployment is scaled up
 
+### Deploy Pod via Fargate
+
+```
+kubectl get no  # should see only two nodes   
+kubectl create ns fargate-ns
+kubectl run nginx --image=nginx -n fargate-ns
+kubectl get po -n fargate-ns
+kubectl get no  # should see additional "fargate" nodes   
+```
 
 ## TODOS
 
 #### cluster todos
-- look into fargate
 - add scenario for upgrading (multiple ways to do this depending on workflow/ecosystem)
 
 #### terraform todos

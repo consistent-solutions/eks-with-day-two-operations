@@ -1,0 +1,19 @@
+---
+
+- name: create metrics server override values file
+  template:
+    src: "{{ item }}.yaml.j2"
+    dest: "/tmp/{{ item }}.yaml"
+  with_items:
+    - "metrics-server"
+
+- name: apply files
+  shell: |
+    {{ kubectl_command }} \
+    apply -f /tmp/{{ item }}.yaml
+  register: install_results
+  until: install_results is success
+  retries: 2
+  delay: 3
+  with_items:
+    - "metrics-server"
