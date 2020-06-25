@@ -124,7 +124,7 @@ metadata:
   labels:
     app: cluster-autoscaler
   annotations:
-    cluster-autoscaler.kubernetes.io/safe-to-evict: "false" #2
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 spec:
   replicas: 1
   selector:
@@ -140,7 +140,7 @@ spec:
     spec:
       serviceAccountName: cluster-autoscaler
       containers:
-        - image: k8s.gcr.io/cluster-autoscaler:v1.14.7  #4
+        - image: k8s.gcr.io/cluster-autoscaler:v1.14.7
           name: cluster-autoscaler
           resources:
             limits:
@@ -156,9 +156,9 @@ spec:
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
             - --expander=least-waste
-            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/{{ cluster_name_tag }} #1
-            - --balance-similar-node-groups       #3a
-            - --skip-nodes-with-system-pods=false #3b
+            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/{{ cluster_name_tag }}
+            - --balance-similar-node-groups
+            - --skip-nodes-with-system-pods=false
           env:
             - name: AWS_REGION
               value: "{{ aws_region }}"
